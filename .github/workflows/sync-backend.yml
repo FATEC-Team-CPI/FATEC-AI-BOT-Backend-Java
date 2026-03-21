@@ -1,0 +1,53 @@
+name: Sync Backend To Central
+
+on:
+  push:
+    branches: [ "develop" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CENTRAL_REPO: FATEC-Team-CPI/FATEC-PI-2026-FATEC-AI-BOT
+  TARGET_BRANCH: develop
+
+jobs:
+  sync-backend:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: sync-backend-central
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout backend repo
+        uses: actions/checkout@v4
+
+      - name: Checkout central repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CENTRAL_REPO }}
+          token: ${{ secrets.CENTRAL_REPO_TOKEN }}
+          path: central
+          ref: ${{ env.TARGET_BRANCH }}
+
+      - name: Sync files to backend folder
+        run: |
+          mkdir -p central/backend
+          rsync -a --delete \
+            --exclude ".git" \
+            --exclude ".github" \
+            ./ central/backend/
+
+      - name: Commit and push changes
+        run: |
+          cd central
+          git config user.name "sync-bot"
+          git config user.email "sync-bot@users.noreply.github.com"
+          git add backend
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git commit -m "chore(sync): backend from ${GITHUB_REPOSITORY}@${GITHUB_SHA}"
+          git push origin "${{ env.TARGET_BRANCH }}"
