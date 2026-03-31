@@ -45,3 +45,9 @@ O bootstrap inclui seed desses exemplos por padrao. Para desativar, altere em `d
 ### Arquivos
 - `docker-compose.localstack.yml`
 - `localstack/init/ready.d/01-create-dynamodb-table.sh`
+
+## OpenAPI e Swagger
+
+Com a aplicacao rodando em dev, acesse:
+- Swagger UI: `http://localhost:8080/swagger`
+- OpenAPI: `http://localhost:8080/openapi`
