@@ -5,6 +5,8 @@ PROD_IMAGE := $(APP_NAME):prod
 
 DEV_CONTAINER := $(APP_NAME)-dev
 PROD_CONTAINER := $(APP_NAME)-prod
+LOCALSTACK_COMPOSE_FILE := docker-compose.localstack.yml
+LOCALSTACK_SERVICE := localstack
 
 MAVEN_IMAGE := maven:3.9.9-eclipse-temurin-25
 PROD_DOCKERFILE := Dockerfile.prod
@@ -24,7 +26,7 @@ NULL_DEV := /dev/null
 MVNW := ./mvnw
 endif
 
-.PHONY: help dev-image dev-up dev-shell dev-down build-artifacts prod-image prod-up prod-down prod-logs clean-target
+.PHONY: help dev-image dev-up dev-shell dev-down build-artifacts prod-image prod-up prod-down prod-logs localstack-up localstack-down localstack-logs localstack-tables clean-target
 
 help:
 	@echo "Targets available:"
@@ -37,6 +39,10 @@ help:
 	@echo "  make prod-up          Run production container in background"
 	@echo "  make prod-down        Stop and remove production container"
 	@echo "  make prod-logs        Tail production container logs"
+	@echo "  make localstack-up    Start LocalStack (DynamoDB only)"
+	@echo "  make localstack-down  Stop LocalStack"
+	@echo "  make localstack-logs  Tail LocalStack logs"
+	@echo "  make localstack-tables List DynamoDB tables in LocalStack"
 	@echo "  make clean-target     Remove local target directory"
 
 dev-image:
@@ -87,6 +93,18 @@ prod-down:
 
 prod-logs:
 	docker logs -f $(PROD_CONTAINER)
+
+localstack-up:
+	docker compose -f $(LOCALSTACK_COMPOSE_FILE) up -d
+
+localstack-down:
+	docker compose -f $(LOCALSTACK_COMPOSE_FILE) down
+
+localstack-logs:
+	docker compose -f $(LOCALSTACK_COMPOSE_FILE) logs -f $(LOCALSTACK_SERVICE)
+
+localstack-tables:
+	docker compose -f $(LOCALSTACK_COMPOSE_FILE) exec $(LOCALSTACK_SERVICE) awslocal dynamodb list-tables --region us-east-1
 
 clean-target:
 	rm -rf target
