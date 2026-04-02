@@ -5,6 +5,7 @@ PROD_IMAGE := $(APP_NAME):prod
 
 DEV_CONTAINER := $(APP_NAME)-dev
 PROD_CONTAINER := $(APP_NAME)-prod
+DOCKER_COMPOSE_FILE := docker-compose.yml
 LOCALSTACK_COMPOSE_FILE := docker-compose.localstack.yml
 LOCALSTACK_SERVICE := localstack
 
@@ -51,8 +52,11 @@ dev-image:
 dev-up: dev-image
 	docker run --rm -it \
 		--name $(DEV_CONTAINER) \
+		--network fatec-network \
 		-p 8080:8080 \
 		-p 5005:5005 \
+		-e QUARKUS_DEVSERVICES_ENABLED=false \
+		-e QUARKUS_DYNAMODB_ENDPOINT_OVERRIDE=http://localstack:4566 \
 		-v "$(HOST_WORKSPACE):/workspace" \
 		-v "$(M2_DIR):/root/.m2" \
 		-w /workspace \
@@ -68,7 +72,7 @@ dev-shell: dev-image
 		bash
 
 dev-down:
-	-docker stop $(DEV_CONTAINER)
+	@echo "Dev mode is running locally - use Ctrl+C to stop"
 
 build-artifacts:
 	docker run --rm \
@@ -95,16 +99,16 @@ prod-logs:
 	docker logs -f $(PROD_CONTAINER)
 
 localstack-up:
-	docker compose -f $(LOCALSTACK_COMPOSE_FILE) up -d
+	docker compose up -d
 
 localstack-down:
-	docker compose -f $(LOCALSTACK_COMPOSE_FILE) down
+	docker compose down
 
 localstack-logs:
-	docker compose -f $(LOCALSTACK_COMPOSE_FILE) logs -f $(LOCALSTACK_SERVICE)
+	docker compose logs -f $(LOCALSTACK_SERVICE)
 
 localstack-tables:
-	docker compose -f $(LOCALSTACK_COMPOSE_FILE) exec $(LOCALSTACK_SERVICE) awslocal dynamodb list-tables --region us-east-1
+	docker compose exec $(LOCALSTACK_SERVICE) awslocal dynamodb list-tables --region us-east-1
 
 clean-target:
 	rm -rf target

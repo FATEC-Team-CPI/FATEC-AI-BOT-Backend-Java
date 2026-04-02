@@ -51,3 +51,63 @@ O bootstrap inclui seed desses exemplos por padrao. Para desativar, altere em `d
 Com a aplicacao rodando em dev, acesse:
 - Swagger UI: `http://localhost:8080/swagger`
 - OpenAPI: `http://localhost:8080/openapi`
+
+## Arquitetura Hexagonal
+
+O projeto segue o padrão hexagonal (ports & adapters) para desacoplar lógica de negócio da infraestrutura.
+
+### Estrutura por Domínio
+```
+src/main/java/org/acme/
+├── admin/
+│   ├── AdminResource.java              (Controller/HTTP)
+│   ├── domain/
+│   │   └── AdminUser.java              (Entidade de Domínio)
+│   ├── dto/
+│   │   ├── CreateAdminRequest.java
+│   │   └── AdminResponse.java
+│   ├── port/
+│   │   └── AdminUserRepository.java    (Interface/Contrato)
+│   ├── service/
+│   │   └── AdminUserService.java       (Lógica de Negócio)
+│   └── adapter/
+│       └── DynamoDBAdminUserRepository.java (Implementação)
+```
+
+### Fluxo de Requisição
+1. **Controller (AdminResource)** - Recebe requisição HTTP
+2. **Service (AdminUserService)** - Orquestra lógica de negócio
+3. **Port (AdminUserRepository)** - Interface de dados (contrato)
+4. **Adapter (DynamoDBAdminUserRepository)** - Implementação com DynamoDB
+
+### Exemplo: Criar Admin
+```bash
+curl -X POST http://localhost:8080/admin \
+  -H "Content-Type: application/json" \
+  -d '{
+    "unidade": "Itaquera",
+    "email": "admin@fatec.com",
+    "name": "João Silva",
+    "password": "Senha@123",
+    "role": "SUPER_ADMIN"
+  }'
+```
+
+Resposta (201 Created):
+```json
+{
+  "pk": "FatecItaquera#users",
+  "sk": "admin@fatec.com",
+  "name": "João Silva",
+  "role": "SUPER_ADMIN",
+  "status": "active",
+  "createdAt": "2026-04-02T10:00:00Z",
+  "updatedAt": "2026-04-02T10:00:00Z"
+}
+```
+
+### Vantagens desta Arquitetura
+- **Desacoplamento**: Service não conhece DynamoDB, apenas port
+- **Testabilidade**: Fácil mockar o repository em testes unitários
+- **Flexibilidade**: Trocar DynamoDB por MongoDB/SQL sem alterar Service
+- **Manutenibilidade**: Lógica de negócio centralizada no Service

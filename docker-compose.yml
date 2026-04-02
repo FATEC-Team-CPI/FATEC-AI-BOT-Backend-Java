@@ -27,4 +27,4 @@ volumes:
 networks:
   fatec-network:
     name: fatec-network
-    external: true
+    driver: bridge

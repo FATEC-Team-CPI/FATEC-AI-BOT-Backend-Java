@@ -56,8 +56,8 @@ fi
 echo "[localstack-init] Seeding example items for single-table model"
 
 put_item_if_not_exists \
-  '{"pk":{"S":"FatecItaquera#users"},"sk":{"S":"email@admin.com"},"entityType":{"S":"AUTH_USER"},"role":{"S":"ADMIN"},"status":{"S":"ACTIVE"},"gsi1pk":{"S":"AUTH#EMAIL"},"gsi1sk":{"S":"email@admin.com"}}' \
-  '{"pk":{"S":"FatecItaquera#users"},"sk":{"S":"email@admin.com"}}'
+  '{"pk":{"S":"FatecItaquera#USERS"},"sk":{"S":"email@admin.com"},"name":{"S":"Admin User"},"password_hash":{"S":"hashed_admin123"},"entityType":{"S":"ADMIN"},"role":{"S":"SUPER_ADMIN"},"status":{"S":"active"},"created_at":{"N":"1743667200"},"updated_at":{"N":"1743667200"}}' \
+  '{"pk":{"S":"FatecItaquera#USERS"},"sk":{"S":"email@admin.com"}}'
 
 put_item_if_not_exists \
   '{"pk":{"S":"Unidades"},"sk":{"S":"FatecItaquera"},"entityType":{"S":"UNIT"},"cidade":{"S":"Sao Paulo"},"status":{"S":"ACTIVE"}}' \
