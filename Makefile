@@ -45,7 +45,7 @@ dev-image:
 dev-up: dev-image
 	docker run --rm -it \
 		--name $(DEV_CONTAINER) \
-		-p 8080:8080 \
+		-p 8082:8080 \
 		-p 5005:5005 \
 		-v "$(HOST_WORKSPACE):/workspace" \
 		-v "$(M2_DIR):/root/.m2" \
