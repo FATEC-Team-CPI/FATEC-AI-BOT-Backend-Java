@@ -2,6 +2,8 @@ package org.acme.users.service;
 
 import org.acme.users.dto.CreateUserRequest;
 import org.acme.users.dto.CreateUserResponse;
+import org.acme.users.dto.TokenUserRequest;
+import org.acme.users.dto.TokenUserResponse;
 
 /**
  * Service Interface: Contrato da camada de negócio
@@ -27,6 +29,12 @@ public interface IUserService {
     CreateUserResponse buscarPorEmail(String email) throws Exception;
 
     // caso de uso: login
+
+    // //by Luana
+    //     @param token
+    //     @return
+   
+    // TokenUserResponse validarToken(TokenUserRequest token) throws Exception;
     
 
 }
