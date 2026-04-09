@@ -3,10 +3,13 @@ package org.acme.users.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import org.acme.users.dto.CreateUserRequest;
 import org.acme.users.dto.CreateUserResponse;
+import org.acme.users.dto.TokenUserRequest;
+import org.acme.users.dto.TokenUserResponse;
 import org.acme.users.model.User;
 import org.acme.users.repository.IUserRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
@@ -66,6 +69,23 @@ public class UserService implements IUserService {
         return repository.findByEmail(email)
             .map(this::toCreateUserResponse)
             .orElseThrow(() -> new IllegalArgumentException("Admin não encontrado: " + email));
+    }
+
+
+    @Override
+    public TokenUserResponse validarToken(TokenUserRequest token) throws Exception{
+        logger.info("Validando token: {}", token);
+        //mensagem 
+
+        //validar token aqui
+
+        Boolean tokenResponseStatus = true;
+        String tokenResponse = "";
+        final String tokenType = "Bearer";
+        Instant tempoLimite = Instant.now().plusSeconds(7200);
+
+        return new TokenUserResponse(tokenResponseStatus, tokenResponse, tokenType, tempoLimite);
+
     }
     
     

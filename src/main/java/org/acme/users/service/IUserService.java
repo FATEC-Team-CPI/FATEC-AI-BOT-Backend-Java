@@ -28,13 +28,13 @@ public interface IUserService {
      */
     CreateUserResponse buscarPorEmail(String email) throws Exception;
 
-    // caso de uso: login
-
-    // //by Luana
-    //     @param token
-    //     @return
-   
-    // TokenUserResponse validarToken(TokenUserRequest token) throws Exception;
-    
+    /**
+     * Caso de uso: Validar token
+     * @param token dados do token
+     * @return response com dados do token e tempo de validado do token
+     * @throws IllegalArgumentException se token invalido
+     */
+    TokenUserResponse validarToken(TokenUserRequest token) throws Exception;
+    //comentarios são importantes para documentacao
 
 }
