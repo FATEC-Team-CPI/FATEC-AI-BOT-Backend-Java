@@ -131,16 +131,16 @@ public class UserResource {
                 .build(); //constroi o objeto response + status
              
 
-
        } catch (IllegalArgumentException e) {
-            logger.warn("Admin não encontrado: {}", token);
+            logger.warn("Credenciais de token não encontrado: {}", token);
             return Response.status(Response.Status.NOT_FOUND)
                 .entity(Map.of("error", e.getMessage()))
                 .build();
-        } catch (Exception e) {
-            logger.error("Erro ao buscar admin", e);
+        
+            } catch (Exception e) {
+            logger.error("Erro ao validar token", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(Map.of("error", "Erro ao buscar administrador"))
+                .entity(Map.of("error", "Token inválido ou vazio."))
                 .build();
         }
     }

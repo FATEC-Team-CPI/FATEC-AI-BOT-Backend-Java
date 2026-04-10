@@ -1,5 +1,6 @@
 package org.acme.users.service;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -80,32 +81,22 @@ public class UserService implements IUserService {
 
 
     @Override
+    @RolesAllowed("admin")
     public TokenUserResponse validarToken(TokenUserRequest token) throws Exception{
         logger.info("Validando token: {}", token);
 
         try {
-            
-        String tokenAjustado = token.token().replace("Bearer", "").trim();
+            Instant tokenResponseHrLimite = Instant.now().plusSeconds(7200);
+            return new TokenUserResponse("Token válido", tokenResponseHrLimite);
 
-        
-
-        Boolean tokenResponseStatus = false;
-        String tokenResponse = tokenAjustado;
-        final String tokenType = "Bearer";
-        Instant tokenHrLimite = Instant.now().plusSeconds(7200);
-
-        return new TokenUserResponse(tokenResponseStatus, tokenResponse, tokenType, tokenHrLimite);
-
-
+            // String subject = jwt.getSubject(); // usuário
+            // Instant exp = parseInstant(jwt.getExpirationTime());
 
 
         } catch (Exception e) {
             throw new Exception(e.getMessage());
             //cria objeto throw a partir da classe exeception e retorna a mensagem de erro
-        }
-
-        //testa como o erro vai ser retornado para o front, é importe retornar se o token foi valido ou nao
-        
+        }        
 
     }
     
