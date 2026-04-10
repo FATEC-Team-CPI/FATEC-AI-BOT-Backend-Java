@@ -12,6 +12,9 @@ import org.acme.users.dto.TokenUserRequest;
 import org.acme.users.dto.TokenUserResponse;
 import org.acme.users.model.User;
 import org.acme.users.repository.IUserRepository;
+import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.jose4j.jwt.consumer.InvalidJwtException;
+
 import io.quarkus.elytron.security.common.BcryptUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +32,10 @@ public class UserService implements IUserService {
     
     @Inject
     IUserRepository repository;
+
+    @Inject
+    JsonWebToken jwt;
+
     
     /**
      * Caso de uso: Criar novo administrador
@@ -75,21 +82,30 @@ public class UserService implements IUserService {
     @Override
     public TokenUserResponse validarToken(TokenUserRequest token) throws Exception{
         logger.info("Validando token: {}", token);
-        //mensagem 
 
-        //validar token aqui
+        try {
+            
+        String tokenAjustado = token.token().replace("Bearer", "").trim();
+
+        
+
         Boolean tokenResponseStatus = false;
-
-        if ("1a.1b.1c".equals(token.token())){
-            //objeto token instanciado pela classe TokenUserRequest, que tem o atributo token, por isso token.token()
-            tokenResponseStatus = true;
-        } //NAO ESTA FUNCIONANDO 
-
-        String tokenResponse = "";
+        String tokenResponse = tokenAjustado;
         final String tokenType = "Bearer";
-        Instant tempoLimite = Instant.now().plusSeconds(7200);
+        Instant tokenHrLimite = Instant.now().plusSeconds(7200);
 
-        return new TokenUserResponse(tokenResponseStatus, tokenResponse, tokenType, tempoLimite);
+        return new TokenUserResponse(tokenResponseStatus, tokenResponse, tokenType, tokenHrLimite);
+
+
+
+
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+            //cria objeto throw a partir da classe exeception e retorna a mensagem de erro
+        }
+
+        //testa como o erro vai ser retornado para o front, é importe retornar se o token foi valido ou nao
+        
 
     }
     
