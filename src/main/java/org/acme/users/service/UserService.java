@@ -78,8 +78,13 @@ public class UserService implements IUserService {
         //mensagem 
 
         //validar token aqui
+        Boolean tokenResponseStatus = false;
 
-        Boolean tokenResponseStatus = true;
+        if ("1a.1b.1c".equals(token.token())){
+            //objeto token instanciado pela classe TokenUserRequest, que tem o atributo token, por isso token.token()
+            tokenResponseStatus = true;
+        } //NAO ESTA FUNCIONANDO 
+
         String tokenResponse = "";
         final String tokenType = "Bearer";
         Instant tempoLimite = Instant.now().plusSeconds(7200);

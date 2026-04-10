@@ -110,12 +110,12 @@ public class UserResource {
 
     // criar metodo de autenticação de token
     @GET
-    @Path("auth-token")
+    @Path("auth/token")
     @Operation(summary = "Validar token JWT", description = "Retorna se token válido e tempo de expiração")
     @APIResponse(responseCode = "200", description = "Token válidado",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenUserResponse.class)))
     @APIResponse(responseCode = "404", description = "Token inválido")
-    public Response validarToken(@HeaderParam("token") String token){
+    public Response validarToken(@HeaderParam("Authorization") String token){
         //header apenas recebe string
         try {
             logger.info("Validando token: {}", token);
