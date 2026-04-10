@@ -112,16 +112,24 @@ public class UserResource {
     @GET
     @Path("auth-token")
     @Operation(summary = "Validar token JWT", description = "Retorna se token válido e tempo de expiração")
-     @APIResponse(responseCode = "200", description = "Token válidado",
+    @APIResponse(responseCode = "200", description = "Token válidado",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenUserResponse.class)))
     @APIResponse(responseCode = "404", description = "Token inválido")
-
-    public Response validarToken(@PathParam("token") TokenUserRequest token){
+    public Response validarToken(@HeaderParam("token") String token){
+        //header apenas recebe string
         try {
             logger.info("Validando token: {}", token);
 
-            TokenUserResponse tokenResponse = service.validarToken(token);
-             return Response.status(Response.Status.CREATED).entity(token).build();
+            TokenUserRequest tokenRequest = new TokenUserRequest(token);
+            //trasformo o token que recebi no seu dto request, que é string tambem
+
+            TokenUserResponse tokenResponse = service.validarToken(tokenRequest);
+            //envio o request (string) pro service e trasformo ele em response
+
+            return Response.status(Response.Status.OK) //statuys ok -> sucesso
+                .entity(tokenResponse) //corpo da resposta vai ser em token response
+                .build(); //constroi o objeto response + status
+             
 
 
        } catch (IllegalArgumentException e) {
@@ -136,4 +144,5 @@ public class UserResource {
                 .build();
         }
     }
+
 }
