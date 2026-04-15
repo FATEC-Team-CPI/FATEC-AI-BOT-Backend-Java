@@ -81,19 +81,16 @@ public class AIBotService implements IAIBotService {
             );
         }
 
-
-
-
-
     }
 
     @Override
     public UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documento) throws IllegalArgumentException {
         //TESTE PARA VE SE VALIDAR O TIPO DE DOCUMENTO FUNCIONA
         //FAZER UPLOAD PARA O LOCALSTACK AQUI DEPOIS
-        
+
         if (validarTipoDocumento(documento) == true) {;
             return new UploadDocResponse(
+                //precisa criar um novo objeto de resposta, porque o record é imutável, não tem como setar os campos depois
                 true,
                 "Documento enviado com sucesso",
                 "chave-gerada-no-s3"
@@ -109,6 +106,14 @@ public class AIBotService implements IAIBotService {
 
     @Override
     public UploadDocResponse uploadDetalhesDocumentoNoDB(UploadDocRequest documento) throws IllegalArgumentException {
-        return;
+        //VALIDAR SE O DOCUMENTO SUBIU PRO LOCALSTACK ANTES DE SALVAR OS DETALHES NO DB, SE NÃO SUBIU, NÃO SALVA NO DB
+
+        
+        //apenas para o codigo parar de reclamar da falta de return
+            return new UploadDocResponse(
+                false,
+                "Falha ao enviar documento",
+                null
+            );
     }
 }
