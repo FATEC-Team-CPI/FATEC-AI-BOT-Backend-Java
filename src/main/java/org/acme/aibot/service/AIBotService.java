@@ -1,0 +1,60 @@
+package org.acme.aibot.service;
+
+import org.acme.users.repository.IUserRepository;
+import org.acme.aibot.dto.UploadDocRequest;
+import org.acme.aibot.dto.UploadDocResponse;
+import org.acme.aibot.service.IAIBotService;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+
+import org.slf4j.LoggerFactory;
+import org.apache.tika.Tika;
+import java.nio.file.Path;
+import java.util.List;
+
+
+/**
+ * Service Implementation: Lógica de negócio concreta
+ * Orquestra as operações do domínio com o repositório
+ * Responsável por validações de negócio e transformações
+ * 
+ * Implementação de: IIABotService
+ */
+@ApplicationScoped
+public class AIBotService implements IAIBotService {
+    private static final Logger logger = LoggerFactory.getLogger(AIBotService.class);
+    
+    // @Inject
+    // IUserRepository repository;
+
+    private static final Tika TIKA = new Tika();
+    private static final List<String> TIPOS_PERMITIDOS = List.of(
+        "application/pdf",
+        "image/png",
+        "image/jpeg"
+    );
+
+    @Override
+    public Boolean validarDocumento(UploadDocRequest documento) throws Exception {
+
+        Path path = documento.uploadedFile();
+        String tipoReal = TIKA.detect(path.toFile()); // lê os magic bytes
+
+        if (!TIPOS_PERMITIDOS.contains(tipoReal)) {
+            throw new WebApplicationException(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Tipo de arquivo inválido: " + tipoReal)
+                    .build()
+            );
+        }
+        return true;
+
+    }
+
+    // @Override
+    // public UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documento) throws Exception {
+    //     return;
+    // }
+}
