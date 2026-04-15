@@ -24,37 +24,48 @@ import java.util.List;
  */
 @ApplicationScoped
 public class AIBotService implements IAIBotService {
-    private static final Logger logger = LoggerFactory.getLogger(AIBotService.class);
+    // private static final Logger logger = LoggerFactory.getLogger(AIBotService.class);
     
     // @Inject
     // IUserRepository repository;
 
-    private static final Tika TIKA = new Tika();
-    private static final List<String> TIPOS_PERMITIDOS = List.of(
-        "application/pdf",
-        "image/png",
-        "image/jpeg"
-    );
+
 
     @Override
     public Boolean validarDocumento(UploadDocRequest documento) throws Exception {
+        // logger.info("Iniciando criação de admin para: {}", request.email());
 
-        Path path = documento.uploadedFile();
-        String tipoReal = TIKA.detect(path.toFile()); // lê os magic bytes
+        List<String> TIPOS_PERMITIDOS = List.of(
+        "application/pdf",
+        "image/png",
+        "image/jpeg"
+        );
 
-        if (!TIPOS_PERMITIDOS.contains(tipoReal)) {
+        final Tika TIKA = new Tika();
+
+        String tipoDocumento = TIKA.detect(documento); 
+        //tipo documento
+
+        if (!TIPOS_PERMITIDOS.contains(tipoDocumento)) {
             throw new WebApplicationException(
                 Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Tipo de arquivo inválido: " + tipoReal)
+                    .entity("Tipo de arquivo inválido: " + tipoDocumento)
                     .build()
             );
+            return false;
         }
+
         return true;
 
     }
 
-    // @Override
-    // public UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documento) throws Exception {
-    //     return;
-    // }
+    @Override
+    public UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documento) throws Exception {
+        return;
+    }
+
+    @Override
+    public UploadDocResponse uploadDetalhesDocumentoNoDB(UploadDocRequest documento) throws Exception {
+        return;
+    }
 }
