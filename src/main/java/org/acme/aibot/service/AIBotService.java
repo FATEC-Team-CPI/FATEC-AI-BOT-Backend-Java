@@ -11,8 +11,13 @@ import jakarta.ws.rs.WebApplicationException;
 
 import org.slf4j.LoggerFactory;
 import org.apache.tika.Tika;
+
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+
+import jakarta.ws.rs.core.Response;
 
 
 /**
@@ -30,32 +35,55 @@ public class AIBotService implements IAIBotService {
     // IUserRepository repository;
 
 
-
     @Override
-    public Boolean validarDocumento(UploadDocRequest documento) throws Exception {
+    public boolean validarTipoDocumento(UploadDocRequest documentoUpload) throws IllegalArgumentException {
         // logger.info("Iniciando criação de admin para: {}", request.email());
 
         List<String> TIPOS_PERMITIDOS = List.of(
         "application/pdf",
+        "application/docx",
+        "application/xlsx",
+        "apllication/pptx",
+        "application/html",
+        "application/xhtml",
+        "application/csv",
+        "application/markdown",
+
         "image/png",
-        "image/jpeg"
+        "image/jpeg",
+        "image/tiff",
+        "image/bmp",
+        "image/webp"
         );
+        //arquivos suportados pelo docling
 
         final Tika TIKA = new Tika();
 
-        String tipoDocumento = TIKA.detect(documento); 
-        //tipo documento
+        try {
+            File file = documentoUpload.document.uploadedFile().toFile();
+            //documentoupload é o corpo inteiro da requsição, e document é o campo dentro dele
+            String tipoDocumento = TIKA.detect(file); 
 
-        if (!TIPOS_PERMITIDOS.contains(tipoDocumento)) {
+            if (!TIPOS_PERMITIDOS.contains(tipoDocumento)) {
+                throw new WebApplicationException(
+                    Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Tipo de arquivo inválido: " + tipoDocumento)
+                        .build()
+                );
+            }
+            return true;
+
+        } catch (IOException e) {
             throw new WebApplicationException(
-                Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Tipo de arquivo inválido: " + tipoDocumento)
+                Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Erro ao processar documento: " + e.getMessage())
                     .build()
             );
-            return false;
         }
 
-        return true;
+
+
+
 
     }
 

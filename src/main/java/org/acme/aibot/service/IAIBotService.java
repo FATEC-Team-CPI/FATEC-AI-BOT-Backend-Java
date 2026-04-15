@@ -15,7 +15,7 @@ public interface IAIBotService {
      * @return status se valido ou inavlido
      * @throws IllegalArgumentException 
      */
-    boolean validarTipoDocumento(UploadDocRequest documento) throws IllegalArgumentException;
+    boolean validarTipoDocumento(UploadDocRequest documentoUpload) throws IllegalArgumentException;
 
     /**
      * Caso de uso: Fazer upload de documento no localstack
