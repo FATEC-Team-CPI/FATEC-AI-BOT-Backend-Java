@@ -37,17 +37,36 @@ public class AIBotResource {
     @APIResponse(responseCode = "400", description = "Arquivo inválido")
 
     public UploadDocResponse upload(UploadDocRequest request) {
-        
-        //try para envio documento bruto pra uploadDocumentoLocalStack(dentro dele já tem o validador de documento)
-        //se tudo certo, extraio os metadados do documento e chamo uploadDetalhesDocumentoNoDB para salvar os metadados no DB
 
+        try {
 
-        //apenas para o codigo parar de reclamar da falta de return
+            UploadDocResponse uploadStackResponse = service.uploadDocumentoLocalStack(request);
+            if (!uploadStackResponse.sucesso()) {
+                return new UploadDocResponse(
+                    false,
+                    "Falha ao enviar documento pro localstack",
+                    null
+                );
+            }
+
+            UploadDocResponse uploadDBResponse = service.uploadDetalhesDocumentoNoDB(request);
+            if (!uploadStackResponse.sucesso()) {
+                return new UploadDocResponse(
+                    false,
+                    "Falha ao enviar documento pro banco de dados",
+                    null
+                );
+            }
+
             return new UploadDocResponse(
-                false,
-                "Falha ao enviar documento",
+                true,
+                "Documento enviado com sucesso",
                 null
             );
+
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
     }
 
 }

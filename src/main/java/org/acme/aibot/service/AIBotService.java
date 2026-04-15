@@ -137,7 +137,8 @@ public class AIBotService implements IAIBotService {
 
     @Override
     public UploadDocResponse uploadDetalhesDocumentoNoDB(UploadDocRequest documento) throws IllegalArgumentException {
-        //VALIDAR SE O DOCUMENTO SUBIU PRO LOCALSTACK ANTES DE SALVAR OS DETALHES NO DB, SE NÃO SUBIU, NÃO SALVA NO DB
+
+        
 
         
         //apenas para o codigo parar de reclamar da falta de return
