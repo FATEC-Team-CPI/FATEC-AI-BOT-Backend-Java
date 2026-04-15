@@ -88,12 +88,27 @@ public class AIBotService implements IAIBotService {
     }
 
     @Override
-    public UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documento) throws Exception {
-        return;
+    public UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documento) throws IllegalArgumentException {
+        //TESTE PARA VE SE VALIDAR O TIPO DE DOCUMENTO FUNCIONA
+        //FAZER UPLOAD PARA O LOCALSTACK AQUI DEPOIS
+        
+        if (validarTipoDocumento(documento) == true) {;
+            return new UploadDocResponse(
+                true,
+                "Documento enviado com sucesso",
+                "chave-gerada-no-s3"
+            );
+        } else {
+            return new UploadDocResponse(
+                false,
+                "Falha ao enviar documento",
+                null
+            );
+        }
     }
 
     @Override
-    public UploadDocResponse uploadDetalhesDocumentoNoDB(UploadDocRequest documento) throws Exception {
+    public UploadDocResponse uploadDetalhesDocumentoNoDB(UploadDocRequest documento) throws IllegalArgumentException {
         return;
     }
 }
