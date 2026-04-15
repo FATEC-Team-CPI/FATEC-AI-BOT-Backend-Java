@@ -23,7 +23,7 @@ public interface IAIBotService {
      * @return response se documento fez upload com sucesso ou não
      * @throws IllegalArgumentException 
      */
-    UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documento) throws IllegalArgumentException;
+    UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documentoUpload) throws IllegalArgumentException;
 
     /**
      * Caso de uso: Fazer upload de documento no DynamondDB
@@ -31,7 +31,7 @@ public interface IAIBotService {
      * @return response se os detalhes documento fez upload com sucesso ou não
      * @throws IllegalArgumentException 
      */
-    UploadDocResponse uploadDetalhesDocumentoNoDB(UploadDocRequest metadados) throws IllegalArgumentException;
+    UploadDocResponse uploadDetalhesDocumentoNoDB(UploadDocRequest documentoUpload) throws IllegalArgumentException;
     
     
 

@@ -10,15 +10,25 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
 import org.slf4j.LoggerFactory;
+
+import io.quarkus.runtime.annotations.ConfigDocDefault;
+
 import org.apache.tika.Tika;
+import org.eclipse.microprofile.config.inject.ConfigProperties;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 import jakarta.ws.rs.core.Response;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 /**
  * Service Implementation: Lógica de negócio concreta
@@ -34,6 +44,13 @@ public class AIBotService implements IAIBotService {
     // @Inject
     // IUserRepository repository;
 
+    @Inject
+    S3Client s3Client;
+
+    @ConfigProperty(name = "bucket.name")
+    String bucketName;
+
+
 
     @Override
     public boolean validarTipoDocumento(UploadDocRequest documentoUpload) throws IllegalArgumentException {
@@ -48,7 +65,6 @@ public class AIBotService implements IAIBotService {
         "application/xhtml",
         "application/csv",
         "application/markdown",
-
         "image/png",
         "image/jpeg",
         "image/tiff",
@@ -84,22 +100,37 @@ public class AIBotService implements IAIBotService {
     }
 
     @Override
-    public UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documento) throws IllegalArgumentException {
-        //TESTE PARA VE SE VALIDAR O TIPO DE DOCUMENTO FUNCIONA
-        //FAZER UPLOAD PARA O LOCALSTACK AQUI DEPOIS
+    public UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documentoUpload) {
 
-        if (validarTipoDocumento(documento) == true) {;
-            return new UploadDocResponse(
-                //precisa criar um novo objeto de resposta, porque o record é imutável, não tem como setar os campos depois
-                true,
-                "Documento enviado com sucesso",
-                "chave-gerada-no-s3"
+        if (!validarTipoDocumento(documentoUpload)) {
+            throw new WebApplicationException(
+                Response.status(Response.Status.UNSUPPORTED_MEDIA_TYPE)
+                    .entity("Tipo de documento inválido")
+                    .build()
             );
-        } else {
-            return new UploadDocResponse(
-                false,
-                "Falha ao enviar documento",
-                null
+        }
+
+        try {
+            FileUpload fileUpload = documentoUpload.document; 
+            byte[] conteudo = Files.readAllBytes(fileUpload.filePath());
+            String key = "fatec-itaquera/conteudo/" + fileUpload.fileName();
+
+            s3Client.putObject(
+                PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .contentType(fileUpload.contentType())
+                    .build(),
+                RequestBody.fromBytes(conteudo)
+            );
+
+            return new UploadDocResponse(true, "Documento enviado com sucesso", key);
+
+        } catch (IOException e) {
+            throw new WebApplicationException(
+                Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Erro ao processar documento: " + e.getMessage())
+                    .build()
             );
         }
     }
