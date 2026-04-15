@@ -31,7 +31,7 @@ public class AIBotResource {
      */
     @POST
     @Path("/doc-upload")
-    @Operation(summary = "Upload arquivo", description = "Fazer upload de um arquivo para o localstack")
+    @Operation(summary = "Upload arquivo", description = "Fazer upload de um arquivo para o localstack e salva metadados no DynamoDB")
 
     @APIResponse(responseCode = "201", description = "Arquivo enviado com sucesso")
     @APIResponse(responseCode = "400", description = "Arquivo inválido")
@@ -40,20 +40,11 @@ public class AIBotResource {
 
         try {
 
-            UploadDocResponse uploadStackResponse = service.uploadDocumentoLocalStack(request);
+            UploadDocResponse uploadStackResponse = service.uploadDocumento(request);
             if (!uploadStackResponse.sucesso()) {
                 return new UploadDocResponse(
                     false,
-                    "Falha ao enviar documento pro localstack",
-                    null
-                );
-            }
-
-            UploadDocResponse uploadDBResponse = service.uploadDetalhesDocumentoNoDB(request);
-            if (!uploadStackResponse.sucesso()) {
-                return new UploadDocResponse(
-                    false,
-                    "Falha ao enviar documento pro banco de dados",
+                    "Falha ao enviar documento",
                     null
                 );
             }
@@ -65,7 +56,11 @@ public class AIBotResource {
             );
 
         } catch (Exception e) {
-            // TODO: handle exception
+            return new UploadDocResponse(
+                false,
+                "Erro ao processar documento: " + e.getMessage(),
+                null
+            );
         }
     }
 

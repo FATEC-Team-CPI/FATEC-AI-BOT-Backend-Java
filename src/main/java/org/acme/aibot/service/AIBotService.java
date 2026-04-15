@@ -21,14 +21,21 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.ws.rs.core.Response;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+
+
 
 /**
  * Service Implementation: Lógica de negócio concreta
@@ -47,13 +54,19 @@ public class AIBotService implements IAIBotService {
     @Inject
     S3Client s3Client;
 
+    @Inject
+    DynamoDbClient dynamonDbClient;
+    
+
     @ConfigProperty(name = "bucket.name")
     String bucketName;
 
+    @ConfigProperty(name = "dynamodb.table.conteudos") //tabela do dynamon
+    String tableName;
 
 
     @Override
-    public boolean validarTipoDocumento(UploadDocRequest documentoUpload) throws IllegalArgumentException {
+    public boolean validarTipoDocumento(UploadDocRequest documentoUpload) throws WebApplicationException {
         // logger.info("Iniciando criação de admin para: {}", request.email());
 
         List<String> TIPOS_PERMITIDOS = List.of(
@@ -100,7 +113,9 @@ public class AIBotService implements IAIBotService {
     }
 
     @Override
-    public UploadDocResponse uploadDocumentoLocalStack(UploadDocRequest documentoUpload) {
+    public UploadDocResponse uploadDocumento(UploadDocRequest documentoUpload) throws WebApplicationException {
+
+        /*Envia documento bruto para o LocalStack e os metadados para o DynamoDB */
 
         if (!validarTipoDocumento(documentoUpload)) {
             throw new WebApplicationException(
@@ -113,7 +128,7 @@ public class AIBotService implements IAIBotService {
         try {
             FileUpload fileUpload = documentoUpload.document; 
             byte[] conteudo = Files.readAllBytes(fileUpload.filePath());
-            String key = "fatec-itaquera/conteudo/" + fileUpload.fileName();
+            String key = "fatec-itaquera/conteudos/" + fileUpload.fileName() + "-" + Instant.now().toEpochMilli(); 
 
             s3Client.putObject(
                 PutObjectRequest.builder()
@@ -124,7 +139,15 @@ public class AIBotService implements IAIBotService {
                 RequestBody.fromBytes(conteudo)
             );
 
-            return new UploadDocResponse(true, "Documento enviado com sucesso", key);
+            try{
+                uploadDetalhesDocumentoNoDB(fileUpload, key);
+            }catch (Exception e) {
+                // Se falhar ao salvar no DB, tenta deletar o arquivo do S3 para evitar inconsistência
+                s3Client.deleteObject(builder -> builder.bucket(bucketName).key(key).build());
+                throw e; // Re-throw a exceção para ser tratada no nível superior
+            }
+            
+            return new UploadDocResponse(true, "Documento enviado salvo com sucesso", key);
 
         } catch (IOException e) {
             throw new WebApplicationException(
@@ -136,16 +159,38 @@ public class AIBotService implements IAIBotService {
     }
 
     @Override
-    public UploadDocResponse uploadDetalhesDocumentoNoDB(UploadDocRequest documento) throws IllegalArgumentException {
+    public UploadDocResponse uploadDetalhesDocumentoNoDB(FileUpload file, String key) throws WebApplicationException {
 
-        
+        try {
 
-        
-        //apenas para o codigo parar de reclamar da falta de return
-            return new UploadDocResponse(
-                false,
-                "Falha ao enviar documento",
-                null
+            String timeNow = Instant.now().toString();
+
+            dynamonDbClient.putItem(
+                PutItemRequest.builder()
+                .tableName(tableName)
+                .item(Map.of(
+                    "pk",AttributeValue.fromS("FatecItaquera#Conteudos"), 
+                    "sk", AttributeValue.fromS(file.fileName()),
+                    "entityType", AttributeValue.fromS("CONTENT"),
+                    "s3Key", AttributeValue.fromS(key),
+                    "status",    AttributeValue.fromS("ACTIVE"),
+                    "gsi2pk",    AttributeValue.fromS("UNIT#FatecItaquera#CONTENT"),
+                    "gsi2sk",    AttributeValue.fromS("STATUS#ACTIVE#TS#" + timeNow + "#" + file.fileName()))
+                )
+                .build()
+                // pk = "FatecItaquera#Conteudos" -> caminho 
+                // sk = "prova-matematica.pdf" -> chave unica
             );
+
+            return new UploadDocResponse(true, "Documento enviado para DB com sucesso", key);
+
+
+        } catch (WebApplicationException e) {
+            throw new WebApplicationException(
+                Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Erro ao processar documento: " + e.getMessage())
+                    .build()
+            );
+        }
     }
 }
