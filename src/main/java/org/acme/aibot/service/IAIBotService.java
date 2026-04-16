@@ -35,7 +35,7 @@ public interface IAIBotService {
      * @return response se os detalhes documento fez upload com sucesso ou não
      * @throws IllegalArgumentException 
      */
-    UploadDocResponse uploadDetalhesDocumentoNoDB(FileUpload file, String key) throws WebApplicationException;
+    UploadDocResponse uploadDetalhesDocumentoNoDB(String fileName, String key) throws WebApplicationException;
     
     
 

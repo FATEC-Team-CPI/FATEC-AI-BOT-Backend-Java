@@ -7,5 +7,4 @@ public record UploadDocResponse(
     Boolean sucesso,
     String mensagem,
     String key
-    // String url
 ) {}

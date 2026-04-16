@@ -3,6 +3,7 @@ package org.acme.aibot.service;
 import org.acme.users.repository.IUserRepository;
 import org.acme.aibot.dto.UploadDocRequest;
 import org.acme.aibot.dto.UploadDocResponse;
+import org.acme.aibot.model.Documento;
 import org.acme.aibot.service.IAIBotService;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -27,6 +28,9 @@ import java.util.Map;
 
 import jakarta.ws.rs.core.Response;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
@@ -55,8 +59,7 @@ public class AIBotService implements IAIBotService {
     S3Client s3Client;
 
     @Inject
-    DynamoDbClient dynamonDbClient;
-    
+    DynamoDbEnhancedClient enhancedClient;    
 
     @ConfigProperty(name = "bucket.name")
     String bucketName;
@@ -128,7 +131,8 @@ public class AIBotService implements IAIBotService {
         try {
             FileUpload fileUpload = documentoUpload.document; 
             byte[] conteudo = Files.readAllBytes(fileUpload.filePath());
-            String key = "fatec-itaquera/conteudos/" + fileUpload.fileName() + "-" + Instant.now().toEpochMilli(); 
+            String fileName = fileUpload.fileName();
+            String key = "fatec-itaquera/conteudos/" + fileName+ "-" + Instant.now().toEpochMilli(); 
 
             s3Client.putObject(
                 PutObjectRequest.builder()
@@ -140,7 +144,7 @@ public class AIBotService implements IAIBotService {
             );
 
             try{
-                uploadDetalhesDocumentoNoDB(fileUpload, key);
+                uploadDetalhesDocumentoNoDB(fileName, key);
             }catch (Exception e) {
                 // Se falhar ao salvar no DB, tenta deletar o arquivo do S3 para evitar inconsistência
                 s3Client.deleteObject(builder -> builder.bucket(bucketName).key(key).build());
@@ -159,30 +163,16 @@ public class AIBotService implements IAIBotService {
     }
 
     @Override
-    public UploadDocResponse uploadDetalhesDocumentoNoDB(FileUpload file, String key) throws WebApplicationException {
-
+    public UploadDocResponse uploadDetalhesDocumentoNoDB(String fileName, String key) throws WebApplicationException {
+    DynamoDbTable<Documento> table = enhancedClient.table(tableName, TableSchema.fromImmutableClass(Documento.class));
+                            //define a tabela do DB
         try {
 
             String timeNow = Instant.now().toString();
 
-            dynamonDbClient.putItem(
-                PutItemRequest.builder()
-                .tableName(tableName)
-                .item(Map.of(
-                    "pk",AttributeValue.fromS("FatecItaquera#Conteudos"), 
-                    "sk", AttributeValue.fromS(file.fileName()),
-                    "entityType", AttributeValue.fromS("CONTENT"),
-                    "s3Key", AttributeValue.fromS(key),
-                    "status",    AttributeValue.fromS("ACTIVE"),
-                    "gsi2pk",    AttributeValue.fromS("UNIT#FatecItaquera#CONTENT"),
-                    "gsi2sk",    AttributeValue.fromS("STATUS#ACTIVE#TS#" + timeNow + "#" + file.fileName()))
-                )
-                .build()
-                // pk = "FatecItaquera#Conteudos" -> caminho 
-                // sk = "prova-matematica.pdf" -> chave unica
-            );
-
-            return new UploadDocResponse(true, "Documento enviado para DB com sucesso", key);
+            //coloque item na tabela
+            table.putItem(Documento.criar(fileName, key, timeNow));
+            return new UploadDocResponse(true, "Metadados do documento enviado para DB com sucesso", key);
 
 
         } catch (WebApplicationException e) {
