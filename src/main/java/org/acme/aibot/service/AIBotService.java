@@ -4,6 +4,7 @@ import org.acme.users.repository.IUserRepository;
 import org.acme.aibot.dto.UploadDocRequest;
 import org.acme.aibot.dto.UploadDocResponse;
 import org.acme.aibot.model.Documento;
+import org.acme.aibot.repository.DynamoDBAIBotRepository;
 import org.acme.aibot.service.IAIBotService;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -66,6 +67,9 @@ public class AIBotService implements IAIBotService {
 
     @ConfigProperty(name = "dynamodb.table.conteudos") //tabela do dynamon
     String tableName;
+
+    @Inject 
+    DynamoDBAIBotRepository repository;
 
 
     @Override
@@ -164,16 +168,12 @@ public class AIBotService implements IAIBotService {
 
     @Override
     public UploadDocResponse uploadDetalhesDocumentoNoDB(String fileName, String key) throws WebApplicationException {
-    DynamoDbTable<Documento> table = enhancedClient.table(tableName, TableSchema.fromImmutableClass(Documento.class));
-                            //define a tabela do DB
         try {
+            repository.uploadMDnoDynamonDB(Documento.criar(fileName, key));
+            //documento.criar -> cria o objeto documento
+            //repository.uploadMDnoDynamonDB -> salva o objeto que criei no db
 
-            String timeNow = Instant.now().toString();
-
-            //coloque item na tabela
-            table.putItem(Documento.criar(fileName, key, timeNow));
             return new UploadDocResponse(true, "Metadados do documento enviado para DB com sucesso", key);
-
 
         } catch (WebApplicationException e) {
             throw new WebApplicationException(

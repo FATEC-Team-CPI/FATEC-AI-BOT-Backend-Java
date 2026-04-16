@@ -1,15 +1,13 @@
+package org.acme.aibot;
+
 import org.acme.aibot.dto.UploadDocRequest;
 import org.acme.aibot.dto.UploadDocResponse;
 import org.acme.aibot.service.IAIBotService;
-import org.acme.users.dto.CreateUserResponse;
 import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.media.Content;
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 

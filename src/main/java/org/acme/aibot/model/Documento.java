@@ -1,5 +1,7 @@
 package org.acme.aibot.model;
 
+import java.time.Instant;
+
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbImmutable;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -32,7 +34,9 @@ public record Documento(
 ) {
 
     // Factory method para criar novo documento
-    public static Documento criar(String fileName, String key, String timeNow) {
+    public static Documento criar(String fileName, String key) {
+        String timeNow = Instant.now().toString();
+
         return new Documento(
             "FatecItaquera#Conteudos",                 // PK: caminho fixo para conteúdos
             fileName,                                  // SK: nome do arquivo (único)
