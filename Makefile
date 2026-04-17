@@ -53,7 +53,7 @@ dev-up: dev-image
 	docker run --rm -it \
 		--name $(DEV_CONTAINER) \
 		--network fatec-network \
-		-p 8080:8080 \
+		-p 8082:8080 \
 		-p 5005:5005 \
 		-e QUARKUS_DEVSERVICES_ENABLED=false \
 		-e QUARKUS_DYNAMODB_ENDPOINT_OVERRIDE=http://localstack:4566 \
