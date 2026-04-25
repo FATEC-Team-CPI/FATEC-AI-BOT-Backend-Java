@@ -11,18 +11,40 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.List;
 
 @ApplicationScoped
 public class ChatService implements IChatService {
 
     private static final Logger logger = LoggerFactory.getLogger(ChatService.class);
 
+    private static final List<String> INJECTION_KEYWORDS = List.of(
+        "ignore", "esqueça", "esqueca", "agora você é", "agora vc é",
+        "novo papel", "finja", "simule", "a partir de agora",
+        "suas instruções anteriores", "suas ordens anteriores"
+    );
+
     @Inject
     IConnectionAI aiConnection;
+
+    private boolean contemInjection(String question) {
+        String lower = question.toLowerCase();
+        return INJECTION_KEYWORDS.stream().anyMatch(lower::contains);
+    }
 
     @Override
     public Uni<ChatMessageResponse> processMessage(ChatMessageRequest request) {
         logger.info("Processando mensagem do chat - sessionId: {}", request.sessionId());
+
+        if (contemInjection(request.question())) {
+            logger.warn("Tentativa de prompt injection detectada - sessionId: {}", request.sessionId());
+            return Uni.createFrom().item(new ChatMessageResponse(
+                request.sessionId(),
+                "Olá! Sou o FATEC AI Bot e só posso responder dúvidas relacionadas à FATEC. Posso te ajudar com algo? 😊",
+                "BOT_REPLY",
+                Instant.now()
+            ));
+        }
 
         return Uni.createFrom().item(() -> aiConnection.generateResponse(request.question()))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())

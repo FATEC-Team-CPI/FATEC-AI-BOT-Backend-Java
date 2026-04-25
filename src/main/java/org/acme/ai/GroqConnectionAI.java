@@ -16,7 +16,6 @@ public class GroqConnectionAI implements IConnectionAI {
     @RestClient
     GroqRestClient groqClient;
 
-    // O Quarkus injeta o valor definido no application.properties aqui
     @ConfigProperty(name = "groq.api.key")
     String apiKey;
 
