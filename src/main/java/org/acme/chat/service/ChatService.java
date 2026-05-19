@@ -46,21 +46,21 @@ public class ChatService implements IChatService {
             ));
         }
 
-        return Uni.createFrom().item(() -> aiConnection.generateResponse(request.question()))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+        // ✅ Correção: Como generateResponse agora retorna Uni<String>
+        return aiConnection.generateResponse(request.question())
                 .map(respostaIA -> new ChatMessageResponse(
-                        request.sessionId(),
-                        respostaIA,
-                        "BOT_REPLY",
-                        Instant.now()
+                    request.sessionId(),
+                    respostaIA,
+                    "BOT_REPLY",
+                    Instant.now()
                 ))
                 .onFailure().recoverWithItem(e -> {
                     logger.error("Erro no processamento da IA", e);
                     return new ChatMessageResponse(
-                            request.sessionId(),
-                            "Desculpe, ocorreu um erro técnico ao processar sua solicitação.",
-                            "BOT_REPLY",
-                            Instant.now()
+                        request.sessionId(),
+                        "Desculpe, ocorreu um erro técnico ao processar sua solicitação.",
+                        "BOT_REPLY",
+                        Instant.now()
                     );
                 });
     }
