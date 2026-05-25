@@ -44,3 +44,6 @@ docker-compose.override.yml
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
+mcp-server/
+*.pem
+mcp-server.zip
